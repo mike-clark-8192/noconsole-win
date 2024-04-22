@@ -1,5 +1,7 @@
 # noconsole-win
 
+Launch console programs without console windows (on Windows).
+
 This solution builds two .NET Framework executables. Both executables have the same usage format:
 
 `noconsolec.exe <commandline>`
