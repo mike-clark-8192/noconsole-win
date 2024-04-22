@@ -1,24 +1,24 @@
 # noconsole-win
 
-Launch console programs without console windows (on Windows).
-
-This solution builds two .NET Framework executables. Both executables have the same usage format:
-
-`noconsolec.exe <commandline>`
-
-`noconsolew.exe <commandline>`
-
-They are both built without the console subsystem, so they themselves will not display a console window when run.
+Launch console programs without displaying console windows (on Windows).
+This is done by calling win32's CreateProcess function with the `CREATE_NO_WINDOW` flag.
 
 ## noconsolec
-noconsolec uses win32's CreateProcess to create a new process with the commandline specified, prefixed with:
+Usage: `noconsolec.exe <commandline>`
+
+Executes: 
 ```
-%windir%\system32\cmd.exe /c
+%windir%\system32\cmd.exe /c <commandline>
 ```
-The new process is created with the `CREATE_NO_WINDOW` flag. This may be useful for hiding a console window when running a console application. The stdout/stderr of the new process could be redirected using cmd.exe's redirection syntax.
 
 ## noconsolew
-noconsolew uses win32's CreateProcess to create a new process with the commandline specified. The new process is created with the `CREATE_NO_WINDOW` flag. This may be useful for hiding a console window when running a console application. The stdout/stderr of the new process will be lost.
+Usage: `noconsolew.exe <commandline>`
 
-## common behavior
-Both executables will use win32's MessageBox to display detected errors.
+Executes: 
+```
+<commandline>
+```
+
+## Common behavior
+* Uses win32's MessageBox() to display detected errors.
+* Retrieves <commandline> via `GetCommandLineW()` to minimize commandline quoting/escaping quirks.
