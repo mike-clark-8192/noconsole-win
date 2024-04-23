@@ -1,0 +1,88 @@
+name: ReleaseOnTag
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]-*'
+env:
+  # Pre-declare variables defined by step id: version-info
+  VERSION: ''
+  PRERELEASE: ''
+  HAS_PRERELEASE: ''
+  RELEASE_ZIP: ''
+
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version info from tag
+        id: version-info
+        run: |
+          echo "GITHUB_REF_NAME: $env:GITHUB_REF_NAME"
+          $VERSION_PATTERN = '^v?(\d+\.\d+\.\d+)(?:-(.*))?$'
+          if ($env:GITHUB_REF_NAME -match $VERSION_PATTERN) {
+            $VERSION = $matches[1]
+            $PRERELEASE = $matches[2]
+            $HAS_PRERELEASE = $PRERELEASE ? "true" : "false"
+          } else {
+            throw "Unsupported version format: $env:GITHUB_REF_NAME"
+          }
+          $RELEASE_ZIP = "noconsole-win-$env:GITHUB_REF_NAME.zip"
+          Tee-Object -Append $env:GITHUB_ENV -In "VERSION=$VERSION" 
+          Tee-Object -Append $env:GITHUB_ENV -In "PRERELEASE=$PRERELEASE"
+          Tee-Object -Append $env:GITHUB_ENV -In "HAS_PRERELEASE=$HAS_PRERELEASE"
+          Tee-Object -Append $env:GITHUB_ENV -In "RELEASE_ZIP=$RELEASE_ZIP"
+
+          echo "VERSION=$VERSION" | Out-File -Append -FilePath $env:GITHUB_ENV 
+          echo "PRERELEASE=$PRERELEASE" | Out-File -Append -FilePath $env:GITHUB_ENV
+          echo "HAS_PRERELEASE=$HAS_PRERELEASE" | Out-File -Append -FilePath $env:GITHUB_ENV
+          echo "RELEASE_ZIP=$RELEASE_ZIP" | Out-File -Append -FilePath $env:GITHUB_ENV
+
+          echo "VERSION=$VERSION" >> $env:GITHUB_ENV
+          echo "PRERELEASE=$PRERELEASE" >> $env:GITHUB_ENV
+          echo "HAS_PRERELEASE=$HAS_PRERELEASE" >> $env:GITHUB_ENV
+          echo "RELEASE_ZIP=$RELEASE_ZIP" >> $env:GITHUB_ENV
+          Get-Content $env:GITHUB_ENV
+
+      - name: Set version in AssemblyInfo.cs files
+        id: set-assembly-version
+        uses: secondbounce/assemblyinfo-update@v2
+        with:
+          version: ${{ env.VERSION }}
+          filename: 'AssemblyInfo.cs'
+
+      - name: Display assembly version
+        run: |
+          echo "Assembly version: ${{steps.set-assembly-version.outputs.version}}"
+
+      - name: Build
+        run: |
+          dotnet build --configuration Release noconsole-win.sln
+
+      - name: Create release zip
+        run: > 
+          Compress-Archive -Force -CompressionLevel Optimal
+          -Path 
+          *\bin\release\*.exe,
+          README.md
+          -DestinationPath $env:RELEASE_ZIP
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.RELEASE_ZIP }}
+          tag_name: ${{ github.ref_name }}
+          body: ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ env.HAS_PRERELEASE }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
