@@ -4,17 +4,20 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Example: refs/tags/v1.0.0'
+        description: 'Example: refs/tags/v1.0.0-test'
+        default: 'refs/tags/v1.0.0-test'
         required: true
-        default: 'refs/tags/v1.0.0-test6'
-
+      ref_name:
+        description: 'Example: v1.0.0-test'
+        default: 'v1.0.0-test'
+        required: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      GITHUB_REF: ${{ github.event.inputs.ref_name }}
-      GITHUB_REF_NAME: ${{ github.event.inputs.ref_short_name }}
+      GITHUB_REF: ${{ github.event.inputs.ref }}
+      GITHUB_REF_NAME: ${{ github.event.inputs.ref_name }}
     steps:
       - name: Check out code
         uses: actions/checkout@v4
