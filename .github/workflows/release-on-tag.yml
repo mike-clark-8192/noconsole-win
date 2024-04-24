@@ -44,7 +44,6 @@ jobs:
           #######################################################
           # VERSION, PRERELEASE, HAS_PRERELEASE
           #######################################################
-          echo "GITHUB_REPOSITORY: $env:GITHUB_REPOSITORY"
           echo "GITHUB_REF_NAME: $env:GITHUB_REF_NAME"
           $VERSION_PATTERN = '^v?(\d+\.\d+\.\d+)(?:-(.*))?$'
           $REPO_PATTERN = '^(.*)/(.*)$'
