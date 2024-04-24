@@ -21,4 +21,4 @@ Executes:
 
 ## Common behavior
 * Uses win32's MessageBox() to display detected errors.
-* Retrieves <commandline> via `GetCommandLineW()` to minimize commandline quoting/escaping quirks.
+* Retrieves `<commandline>` via `GetCommandLineW()` to minimize commandline quoting/escaping quirks.
